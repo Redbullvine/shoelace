@@ -1,0 +1,68 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shoelace - Warehouse Companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body data-page="home">
+    <header class="topbar">
+      <div class="brand">Shoelace</div>
+      <nav class="nav">
+        <a href="index.html" class="active">Home</a>
+        <a href="new-scan.html">New Scan</a>
+        <a href="saved.html">Saved Scans</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Warehouse companion</p>
+          <h1>Scan shelves. Build inventory. Move surplus fast.</h1>
+          <p class="lead">
+            Shoelace is a mobile-first app for capturing telecom inventory from
+            labels and shelves. Scan now, review later, sell smarter.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="new-scan.html">Start a New Scan</a>
+            <a class="btn ghost" href="saved.html">View Saved Scans</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="card">
+            <h3>Phase 1 focus</h3>
+            <ul>
+              <li>OCR label capture + manual part entry</li>
+              <li>Offline-first queue + local storage</li>
+              <li>Mock analysis with realistic telecom categories</li>
+            </ul>
+            <div class="pill">No build step. Netlify-ready.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="card">
+          <h3>Capture</h3>
+          <p>Snap a wide shelf shot plus close label photos.</p>
+        </div>
+        <div class="card">
+          <h3>Review</h3>
+          <p>Enter a location tag and override unreadable labels.</p>
+        </div>
+        <div class="card">
+          <h3>Sync</h3>
+          <p>Queue offline scans and sync the moment you're online.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">Built for fast warehouse capture.</footer>
+    <script defer src="app.js"></script>
+  </body>
+</html>

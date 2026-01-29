@@ -1,0 +1,42 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saved Scans - Shoelace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body data-page="saved">
+    <header class="topbar">
+      <div class="brand">Shoelace</div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="new-scan.html">New Scan</a>
+        <a href="saved.html" class="active">Saved Scans</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="page-header">
+        <div>
+          <h1>Saved Scans</h1>
+          <p>Manage captured scans and export CSV inventory.</p>
+        </div>
+        <div class="status" id="queueStatus">Queue idle</div>
+      </section>
+
+      <section class="actions">
+        <button class="btn ghost" id="syncQueue" type="button">Sync Queue</button>
+        <button class="btn primary" id="exportCsv" type="button">Export CSV</button>
+      </section>
+
+      <section class="card" id="savedList"></section>
+    </main>
+
+    <footer class="footer">Offline scans sync when online.</footer>
+    <script defer src="app.js"></script>
+  </body>
+</html>

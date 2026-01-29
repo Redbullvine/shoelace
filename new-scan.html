@@ -1,0 +1,54 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>New Scan - Shoelace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body data-page="new">
+    <header class="topbar">
+      <div class="brand">Shoelace</div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="new-scan.html" class="active">New Scan</a>
+        <a href="saved.html">Saved Scans</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="page-header">
+        <div>
+          <h1>New Scan</h1>
+          <p>Add a wide shelf photo plus 2-3 close label shots.</p>
+        </div>
+        <div class="status" id="syncStatus">Offline queue ready</div>
+      </section>
+
+      <section class="card">
+        <div class="field">
+          <label class="label">Capture photos</label>
+          <div class="capture-row">
+            <label class="btn primary" for="photoInput">Add Photos</label>
+            <input id="photoInput" type="file" accept="image/*" capture="environment" multiple />
+            <button class="btn ghost" id="clearDraft" type="button">Clear Draft</button>
+          </div>
+          <p class="hint">Tip: start with a wide shot, then close-ups of labels.</p>
+        </div>
+
+        <div class="thumb-grid" id="thumbGrid"></div>
+      </section>
+
+      <section class="actions">
+        <a class="btn ghost" href="index.html">Back</a>
+        <button class="btn primary" id="toReview" type="button">Review Scan</button>
+      </section>
+    </main>
+
+    <footer class="footer">Draft saves automatically.</footer>
+    <script defer src="app.js"></script>
+  </body>
+</html>

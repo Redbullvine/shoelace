@@ -1,0 +1,48 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scan Result - Shoelace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body data-page="result">
+    <header class="topbar">
+      <div class="brand">Shoelace</div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="new-scan.html">New Scan</a>
+        <a href="saved.html">Saved Scans</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="page-header">
+        <div>
+          <h1>Scan Result</h1>
+          <p id="resultLocation">Loading scan...</p>
+        </div>
+        <div class="status" id="resultStatus">Pending</div>
+      </section>
+
+      <section class="card" id="resultSummary"></section>
+      <section class="card" id="resultItems"></section>
+
+      <section class="card">
+        <button class="btn ghost" id="toggleRaw" type="button">View Raw JSON</button>
+        <pre class="code" id="rawJson" hidden></pre>
+      </section>
+
+      <section class="actions">
+        <a class="btn ghost" href="saved.html">Back to Saved</a>
+        <a class="btn primary" href="new-scan.html">New Scan</a>
+      </section>
+    </main>
+
+    <footer class="footer">Confidence drives review status.</footer>
+    <script defer src="app.js"></script>
+  </body>
+</html>
