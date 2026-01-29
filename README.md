@@ -36,6 +36,10 @@ Then open `http://localhost:8080` in your browser.
 - Go online -> queue syncs -> results populate
 - Export CSV from Saved Scans
 
+## Mobile Notes
+### iOS Photo Upload
+On iPhone, photo uploads use the system chooser (Camera or Photo Library). This is intentional and achieved by omitting the `capture` attribute on the file input.
+
 ## Notes
 - `/api/analyze-scan` returns mock telecom inventory analysis.
 - Ready for Phase 2: real vision OCR + pricing sources.
