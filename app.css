@@ -1,7 +1,8 @@
 ﻿:root {
   --ink: #1c1b18;
-  --accent: #f15b2a;
-  --accent-dark: #c64017;
+  --accent: #4B2E83;
+  --accent-hover: #3E256D;
+  --accent-dark: var(--accent-hover);
   --paper: #f7f0e8;
   --mist: #efe3d5;
   --sand: #e6d4bf;
