@@ -293,6 +293,7 @@ async function initReview() {
       manualParts: draft.photos
         .filter((photo) => photo.manualPart)
         .map((photo) => photo.manualPart),
+      photos: draft.photos.map((photo) => photo.dataUrl),
       photoCount: draft.photos.length,
     };
 
