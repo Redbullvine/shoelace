@@ -18,6 +18,7 @@ function normalizeItem(item = {}, index) {
 function buildResult(payload, analysis) {
   const rawItems = Array.isArray(analysis?.items) ? analysis.items : [];
   const items = rawItems.map((item, index) => normalizeItem(item, index)).slice(0, 6);
+  if (!items.length) return null;
   const overallConfidence = items.length
     ? items.reduce((sum, item) => sum + item.confidence, 0) / items.length
     : 0;
