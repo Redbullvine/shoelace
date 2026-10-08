@@ -1,0 +1,16 @@
+{
+  "name": "shoelace",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Shoelace warehouse companion and image-to-EPS converter",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "potrace": "^2.1.8",
+    "sharp": "^0.33.5"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}

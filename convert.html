@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Image to EPS - Shoelace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Fraunces:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body data-page="convert">
+    <header class="topbar">
+      <div class="brand">Shoelace</div>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="new-scan.html">New Scan</a>
+        <a href="saved.html">Saved Scans</a>
+        <a href="convert.html" class="active">Image to EPS</a>
+      </nav>
+    </header>
+
+    <main class="container">
+      <section class="page-header">
+        <div>
+          <h1>Image to EPS</h1>
+          <p>Turn a PNG, JPEG or other image into clean vector EPS artwork for digitizing.</p>
+        </div>
+        <div class="status" id="convertStatus">Choose an image</div>
+      </section>
+
+      <section class="card">
+        <label class="dropzone" id="dropzone" for="imageInput">
+          <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/tiff,image/bmp,image/avif,image/*" />
+          <strong>Drop an image here or tap to choose</strong>
+          <span class="hint">PNG, JPEG, WebP, GIF, TIFF or BMP. Logos and artwork with solid colors convert best.</span>
+        </label>
+
+        <div class="options">
+          <div class="field">
+            <label class="label" for="colors">Colors</label>
+            <select class="input" id="colors">
+              <option value="auto" selected>Auto detect</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+              <option value="12">12</option>
+              <option value="16">16</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="detail">Detail</label>
+            <select class="input" id="detail">
+              <option value="low">Low (simplest shapes)</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High (keep small details)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="smoothness">Corners</label>
+            <select class="input" id="smoothness">
+              <option value="1.2">Rounder curves</option>
+              <option value="1" selected>Balanced</option>
+              <option value="0.6">Sharper corners</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="layering">Shapes</label>
+            <select class="input" id="layering">
+              <option value="overlap" selected>Slight overlap (no gaps)</option>
+              <option value="stacked">Stacked (fill under top colors)</option>
+              <option value="cutouts">Cutouts (no overlap)</option>
+            </select>
+          </div>
+          <label class="check">
+            <input type="checkbox" id="removeBackground" checked />
+            Remove background color
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="convertBtn" type="button" disabled>Convert to EPS</button>
+        </div>
+      </section>
+
+      <section class="compare" id="results" hidden>
+        <div class="card">
+          <h3>Original</h3>
+          <div class="preview checker"><img id="originalPreview" alt="Original image" /></div>
+        </div>
+        <div class="card">
+          <h3>Vector</h3>
+          <div class="preview checker" id="vectorPreview"></div>
+        </div>
+      </section>
+
+      <section class="card" id="downloadCard" hidden>
+        <h3>Thread colors</h3>
+        <div class="swatches" id="swatches"></div>
+        <p class="hint" id="resultMeta"></p>
+        <div class="actions">
+          <a class="btn primary" id="downloadBtn" download>Download EPS</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">Vectors are traced on the server; your image is not stored.</footer>
+    <script defer src="convert.js"></script>
+  </body>
+</html>
