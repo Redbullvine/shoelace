@@ -10,8 +10,20 @@ Mobile-first PWA-style warehouse companion for scanning telecom inventory. Captu
 - Result display with confidence-based status
 - CSV export for saved scans
 
+## Image to EPS converter
+`convert.html` turns PNG, JPEG, WebP, GIF, TIFF or BMP images into vector EPS for embroidery digitizing. The tracing runs server-side in the `convert-to-eps` Netlify function (`/api/convert-to-eps`):
+
+1. Resample to a fixed working size (small logos are upscaled so edges trace smoothly; JPEG noise is median-filtered).
+2. Learn the palette in OKLab from flat (non-edge) pixels, then add colors for thin details such as small text.
+3. Assign anti-aliased edge pixels to the neighboring region colors, clean specks, and drop the border-connected background.
+4. Trace each color layer with Potrace into Bezier curves and write EPS using only core PostScript operators (`moveto`, `curveto`, `fill`), so Wilcom, Hatch, Pulse and Illustrator can open it.
+
+Options: colors (auto or 2-16), detail, corner sharpness, layering (slight overlap, stacked, cutouts) and background removal.
+
+Run the converter tests with `npm install && npm test`.
+
 ## Local run
-Use any static file server (no build step required):
+Use any static file server for the inventory pages (no build step required). The converter needs the Netlify function, so use `netlify dev` for it:
 
 ```powershell
 # From c:\Projects\Shoelace
