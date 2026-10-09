@@ -1,8 +1,8 @@
 const { vectorize } = require("./vectorize");
-const { toEps, toSvg, hex } = require("./eps");
+const { toEps, hex } = require("./eps");
 
 const MAX_BYTES = 6 * 1024 * 1024;
-const MAX_RESPONSE = 5.5 * 1024 * 1024;
+const MAX_RESPONSE = 5.8 * 1024 * 1024;
 
 function json(statusCode, body) {
   return {
@@ -50,10 +50,9 @@ exports.handler = async (event) => {
     return json(422, { error: "No shapes found in the image. Try turning off background removal." });
   }
 
-  // Netlify caps function responses at 6 MB. Drop the preview before the EPS.
+  // Netlify caps function responses at 6 MB. The browser draws its preview
+  // from the EPS itself, so only the EPS is sent.
   const eps = toEps(result, { title: name });
-  let svg = toSvg(result);
-  if (eps.length + svg.length > MAX_RESPONSE) svg = null;
   if (eps.length > MAX_RESPONSE) {
     return json(413, { error: "This image makes a very large EPS. Try fewer colors or a lower detail level." });
   }
@@ -65,6 +64,5 @@ exports.handler = async (event) => {
     backgroundRemoved: result.backgroundRemoved,
     colors: result.layers.map((layer) => ({ hex: hex(layer.color), area: layer.area, paths: layer.paths.length })),
     eps,
-    svg,
   });
 };

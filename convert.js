@@ -14,6 +14,12 @@ const els = {
   downloadCard: document.getElementById("downloadCard"),
   downloadBtn: document.getElementById("downloadBtn"),
   emailBtn: document.getElementById("emailBtn"),
+  progress: document.getElementById("progress"),
+  progressFill: document.getElementById("progressFill"),
+  progressLabel: document.getElementById("progressLabel"),
+  detailsCard: document.getElementById("detailsCard"),
+  details: document.getElementById("details"),
+  fonts: document.getElementById("fonts"),
   swatches: document.getElementById("swatches"),
   meta: document.getElementById("resultMeta"),
   colors: document.getElementById("colors"),
@@ -26,6 +32,144 @@ const els = {
 let currentFile = null;
 let downloadUrl = null;
 let lastResult = null;
+let progressTimer = null;
+
+// Status bar between the panels: red while the image uploads, yellow while
+// the server traces it, green when the EPS is ready. The server doesn't report
+// progress, so the yellow phase creeps toward 90% until the answer arrives.
+function setProgress(state, label, percent) {
+  clearInterval(progressTimer);
+  els.progress.dataset.state = state;
+  els.progressLabel.textContent = label;
+  els.progressFill.style.width = `${percent}%`;
+  if (state === "converting") {
+    let current = percent;
+    progressTimer = setInterval(() => {
+      current += (90 - current) * 0.08;
+      els.progressFill.style.width = `${current}%`;
+    }, 300);
+  }
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+// The browser can't show EPS, so rebuild the drawing as SVG from the EPS this
+// tool writes (setrgbcolor / moveto / curveto / lineto / closepath / fill).
+// Also counts shapes and curves for the detail summary.
+function epsToSvg(eps) {
+  const box = eps.match(/%%HiResBoundingBox: [\d.]+ [\d.]+ ([\d.]+) ([\d.]+)/) || eps.match(/%%BoundingBox: \d+ \d+ (\d+) (\d+)/);
+  const width = Number(box[1]);
+  const height = Number(box[2]);
+  const y = (v) => (height - Number(v)).toFixed(2);
+  const paths = [];
+  let fill = "#000";
+  let d = [];
+  const stats = { shapes: 0, curves: 0, lines: 0 };
+  for (const line of eps.split("\n")) {
+    const parts = line.trim().split(/\s+/);
+    const op = parts[parts.length - 1];
+    if (op === "setrgbcolor") {
+      fill = "#" + parts.slice(0, 3).map((v) => Math.round(Number(v) * 255).toString(16).padStart(2, "0")).join("");
+    } else if (op === "moveto") {
+      d.push(`M${parts[0]} ${y(parts[1])}`);
+      stats.shapes++;
+    } else if (op === "lineto") {
+      d.push(`L${parts[0]} ${y(parts[1])}`);
+      stats.lines++;
+    } else if (op === "curveto") {
+      d.push(`C${parts[0]} ${y(parts[1])} ${parts[2]} ${y(parts[3])} ${parts[4]} ${y(parts[5])}`);
+      stats.curves++;
+    } else if (op === "closepath") {
+      d.push("Z");
+    } else if (op === "fill" && d.length) {
+      paths.push(`<path fill="${fill}" d="${d.join("")}"/>`);
+      d = [];
+    }
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${paths.join("")}</svg>`;
+  return { svg, width, height, stats };
+}
+
+function formatBytes(bytes) {
+  return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+// Small JPEG of the original for font identification.
+async function imageForFontCheck(file) {
+  const { img, url } = await loadImage(file);
+  const ratio = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(img.naturalWidth * ratio);
+  canvas.height = Math.round(img.naturalHeight * ratio);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  URL.revokeObjectURL(url);
+  return canvas.toDataURL("image/jpeg", 0.9);
+}
+
+async function identifyFonts(file) {
+  try {
+    const image = await imageForFontCheck(file);
+    const response = await fetch("/api/describe-artwork", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Couldn't identify the fonts right now.");
+    return data;
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
+function renderFonts(data) {
+  if (data.error) {
+    els.fonts.innerHTML = `<p class="hint">${escapeHtml(data.error)}</p>`;
+    return;
+  }
+  const intro = data.description ? `<p>${escapeHtml(data.description)}</p>` : "";
+  if (!data.fonts.length) {
+    els.fonts.innerHTML = intro + "<p class=\"hint\">No lettering found.</p>";
+    return;
+  }
+  els.fonts.innerHTML =
+    intro +
+    data.fonts
+      .map((f) => {
+        const extra = [f.style, f.weight, f.effects].filter(Boolean).map(escapeHtml).join(", ");
+        const alts = f.alternatives.length ? `<div class="hint">Similar: ${f.alternatives.map(escapeHtml).join(", ")}</div>` : "";
+        return `
+          <div class="font-row">
+            <div>"${escapeHtml(f.text)}"</div>
+            <div><span class="font-name">${escapeHtml(f.font || "Unknown")}</span> <span class="hint">(${escapeHtml(f.confidence)} confidence)</span></div>
+            ${extra ? `<div class="hint">${extra}</div>` : ""}
+            ${alts}
+          </div>`;
+      })
+      .join("");
+}
+
+function renderDetails(data, drawing) {
+  const label = (select) => select.options[select.selectedIndex].text;
+  const inches = (pt) => (pt / 72).toFixed(2);
+  const rows = [
+    ["File", `${escapeHtml(data.fileName)} (${formatBytes(new Blob([data.eps]).size)})`],
+    ["Format", "EPS (Encapsulated PostScript 3.0), 100% vector, no embedded image"],
+    ["Size", `${Math.round(drawing.width)} x ${Math.round(drawing.height)} pt (${inches(drawing.width)} x ${inches(drawing.height)} in at 72 dpi; scales to any size)`],
+    ["Colors", `${data.colors.length} solid RGB fills`],
+    ["Shapes", `${drawing.stats.shapes.toLocaleString()} closed outlines`],
+    ["Curves", `${drawing.stats.curves.toLocaleString()} Bezier curves, ${drawing.stats.lines.toLocaleString()} straight segments`],
+    ["Settings", `${label(els.colors)} colors, ${label(els.detail)}, ${label(els.smoothness)}, ${label(els.layering)}`],
+    ["Background", data.backgroundRemoved ? "Removed (transparent)" : "Kept"],
+  ];
+  els.details.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+  els.detailsCard.hidden = false;
+}
 
 function setStatus(text, tone = "") {
   els.status.textContent = text;
@@ -77,7 +221,9 @@ async function selectFile(file) {
   els.vector.innerHTML = "";
   els.results.hidden = false;
   els.downloadCard.hidden = true;
+  els.detailsCard.hidden = true;
   els.convertBtn.disabled = false;
+  setProgress("idle", "Ready to convert", 0);
   setStatus(file.name);
 }
 
@@ -85,8 +231,15 @@ async function convert() {
   if (!currentFile) return;
   els.convertBtn.disabled = true;
   setStatus("Converting...", "info");
+  els.vector.innerHTML = "";
+  els.downloadCard.hidden = true;
+  els.detailsCard.hidden = true;
+  els.fonts.innerHTML = "<p class=\"hint\">Identifying fonts...</p>";
+  setProgress("uploading", "Uploading image...", 8);
+  const fontsPromise = identifyFonts(currentFile);
   try {
     const body = await prepareUpload(currentFile);
+    const toConverting = setTimeout(() => setProgress("converting", "Converting to vector...", 30), 700);
     const params = new URLSearchParams({
       name: currentFile.name,
       colors: els.colors.value,
@@ -100,6 +253,8 @@ async function convert() {
       headers: { "Content-Type": body.type || "application/octet-stream" },
       body,
     });
+    clearTimeout(toConverting);
+    if (els.progress.dataset.state !== "converting") setProgress("converting", "Converting to vector...", 60);
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
       throw new Error(data.error || (response.status === 502 || response.status === 504
@@ -107,8 +262,11 @@ async function convert() {
         : "Conversion failed. Please try again."));
     }
     showResult(data);
+    setProgress("done", "Done! Your EPS is ready", 100);
     setStatus("Done", "good");
+    fontsPromise.then(renderFonts);
   } catch (error) {
+    setProgress("error", error.message, 100);
     setStatus(error.message, "warning");
   } finally {
     els.convertBtn.disabled = false;
@@ -119,7 +277,9 @@ function showResult(data) {
   lastResult = data;
   els.emailBtn.disabled = false;
   els.emailBtn.textContent = "Email EPS to justsayin@peoplescom.net";
-  els.vector.innerHTML = data.svg || "<p class=\"hint\">Preview too large to show. The EPS is ready to download.</p>";
+  const drawing = epsToSvg(data.eps);
+  els.vector.innerHTML = drawing.svg;
+  renderDetails(data, drawing);
   els.swatches.innerHTML = data.colors
     .map(
       (color) => `
