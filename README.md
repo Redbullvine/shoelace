@@ -20,6 +20,11 @@ Mobile-first PWA-style warehouse companion for scanning telecom inventory. Captu
 
 Options: colors (auto or 2-16), detail, corner sharpness, layering (slight overlap, stacked, cutouts) and background removal.
 
+The **Email EPS** button sends the converted file to justsayin@peoplescom.net through the `email-eps` function using [Resend](https://resend.com). Set these in Netlify > Site configuration > Environment variables:
+- `RESEND_API_KEY`: an API key from Resend.
+- `EMAIL_FROM`: a sender on a domain verified in Resend, for example `Shoelace <eps@yourdomain.com>`.
+- `EMAIL_TO` (optional): a different recipient.
+
 Run the converter tests with `npm install && npm test`.
 
 ## Local run
