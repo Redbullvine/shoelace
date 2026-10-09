@@ -25,6 +25,8 @@ The **Email EPS** button sends the converted file to justsayin@peoplescom.net th
 - `EMAIL_FROM`: a sender on a domain verified in Resend, for example `Shoelace <eps@yourdomain.com>`.
 - `EMAIL_TO` (optional): a different recipient.
 
+After converting, the page draws the vector preview from the EPS itself and shows an **EPS details** summary (size, colors, shape and curve counts, settings). The **Lettering and fonts** section is a best guess from the original image by the `describe-artwork` function, which uses the same `OPENAI_API_KEY` as scan analysis.
+
 Run the converter tests with `npm install && npm test`.
 
 ## Local run

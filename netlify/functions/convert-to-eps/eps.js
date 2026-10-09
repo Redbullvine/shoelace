@@ -49,22 +49,4 @@ function toEps({ width, height, layers }, { title = "Vectorized artwork" } = {})
   return out.join("\n");
 }
 
-// Browser preview only (the browser can't render EPS); same geometry as the EPS.
-function toSvg({ width, height, layers }) {
-  const pt = ([x, y]) => `${num(x)} ${num(y)}`;
-  const paths = layers.map((layer) => {
-    const d = layer.paths
-      .map((path) => {
-        const parts = [`M${pt(path.start)}`];
-        for (const seg of path.segments) {
-          parts.push(seg.type === "C" ? `C${seg.points.map(pt).join(" ")}` : `L${pt(seg.points[0])}`);
-        }
-        return parts.join("") + "Z";
-      })
-      .join("");
-    return `<path fill="${hex(layer.color)}" d="${d}"/>`;
-  });
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${num(width)} ${num(height)}">${paths.join("")}</svg>`;
-}
-
-module.exports = { toEps, toSvg, hex };
+module.exports = { toEps, hex };

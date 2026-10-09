@@ -416,3 +416,81 @@ a {
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
+
+.compare {
+  grid-template-columns: 1fr;
+}
+
+.progress {
+  --progress-color: #c62828;
+}
+
+.progress[data-state="converting"] {
+  --progress-color: #f2b200;
+}
+
+.progress[data-state="done"] {
+  --progress-color: #2e7d32;
+}
+
+.progress[data-state="idle"] {
+  --progress-color: rgba(0, 0, 0, 0.2);
+}
+
+.progress-track {
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--progress-color);
+  transition: width 0.4s ease, background-color 0.3s ease;
+}
+
+.progress-label {
+  margin-top: 0.4rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--progress-color);
+}
+
+.progress[data-state="idle"] .progress-label {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0 0 1.2rem;
+}
+
+.details dt {
+  font-weight: 600;
+}
+
+.details dd {
+  margin: 0;
+}
+
+.details-heading {
+  margin-top: 0.4rem;
+}
+
+.font-row {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.font-row:last-child {
+  border-bottom: none;
+}
+
+.font-row .font-name {
+  font-weight: 700;
+}

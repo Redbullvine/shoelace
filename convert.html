@@ -92,6 +92,10 @@
           <h3>Original</h3>
           <div class="preview checker"><img id="originalPreview" alt="Original image" /></div>
         </div>
+        <div class="progress" id="progress" data-state="idle" role="status" aria-live="polite">
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-label" id="progressLabel">Ready to convert</div>
+        </div>
         <div class="card">
           <h3>Vector</h3>
           <div class="preview checker" id="vectorPreview"></div>
@@ -106,6 +110,14 @@
           <button class="btn ghost" id="emailBtn" type="button">Email EPS to justsayin@peoplescom.net</button>
           <a class="btn primary" id="downloadBtn" download>Download EPS</a>
         </div>
+      </section>
+
+      <section class="card" id="detailsCard" hidden>
+        <h3>EPS details</h3>
+        <dl class="details" id="details"></dl>
+        <h3 class="details-heading">Lettering and fonts</h3>
+        <div id="fonts"><p class="hint">Identifying fonts...</p></div>
+        <p class="hint">Font names are a best guess from the original image. The EPS stores the letters as shapes, not as a font.</p>
       </section>
     </main>
 
