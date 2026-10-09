@@ -5,10 +5,14 @@ const Potrace = require("potrace/lib/Potrace");
 const Bitmap = require("potrace/lib/types/Bitmap");
 
 const NONE = 255;
+// OKLab distance within which an edge pixel counts as a blend of two colors.
+const BLEND_MATCH = 0.05;
+// OKLab distance within which a pixel is a solid example of a palette color.
+const CORE_MATCH = 0.04;
 
 const DETAIL_PRESETS = {
   low: { workSize: 1000, minRegion: 0.0004, turdSize: 8, optTolerance: 0.4 },
-  medium: { workSize: 1400, minRegion: 0.00012, turdSize: 4, optTolerance: 0.2 },
+  medium: { workSize: 1400, minRegion: 0.00005, turdSize: 4, optTolerance: 0.2 },
   high: { workSize: 1600, minRegion: 0.00003, turdSize: 2, optTolerance: 0.1 },
 };
 
@@ -144,6 +148,12 @@ function mergeClusters(clusters, threshold, maxColors) {
   return clusters;
 }
 
+function nearestDist2(p, clusters) {
+  let best = Infinity;
+  for (const c of clusters) best = Math.min(best, dist2(p, c.lab));
+  return best;
+}
+
 // Squared distance from a color to the closest palette color or to the closest
 // blend of two palette colors (what anti-aliasing between them produces).
 function mixError(p, clusters) {
@@ -227,23 +237,38 @@ function findFlatPixels(lab, opaque, width, height, threshold, offset) {
   return flat;
 }
 
-// Label edge pixels using only the colors of flat regions within `reach`
-// pixels, so the band between red and white splits cleanly at its midpoint
-// (red or white) instead of turning pink or orange.
-function labelEdgesFromRegions(labels, flat, lab, opaque, centers, width, height, reach) {
+// Label edge pixels. A blend pixel may only take a color that occurs solidly
+// within `reach` pixels, so the band between red and white splits cleanly at
+// its midpoint (red or white) instead of turning pink or orange.
+function labelEdgesFromRegions(labels, flat, textured, lab, opaque, centers, width, height, reach) {
   const n = width * height;
+  // Nearest palette color of every edge pixel. A pixel that matches its color
+  // closely counts as a "core" pixel of that color, just like a flat pixel.
+  const nearestOf = new Uint8Array(n);
+  const nearestDist = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    if (!opaque[i] || flat[i]) continue;
+    const p = [lab.L[i], lab.A[i], lab.B[i]];
+    let best = 0;
+    let bestD = Infinity;
+    for (let c = 0; c < centers.length; c++) {
+      const dd = dist2(p, centers[c]);
+      if (dd < bestD) {
+        bestD = dd;
+        best = c;
+      }
+    }
+    nearestOf[i] = best;
+    nearestDist[i] = bestD;
+  }
   const cand = new Uint32Array(n);
-  // Colors that only occur in thin details have no flat pixels; they are
-  // always allowed.
-  let always = 0;
-  const flatCounts = new Array(centers.length).fill(0);
-  for (let i = 0; i < n; i++) if (flat[i]) flatCounts[labels[i]]++;
-  for (let c = 0; c < centers.length; c++) if (flatCounts[c] < 20) always = (always | (1 << c)) >>> 0;
   for (let c = 0; c < centers.length; c++) {
     const own = new Uint8Array(n);
     let any = false;
     for (let i = 0; i < n; i++) {
-      if (flat[i] && labels[i] === c) {
+      if (!opaque[i]) continue;
+      const core = flat[i] ? labels[i] === c : nearestOf[i] === c && nearestDist[i] < CORE_MATCH * CORE_MATCH;
+      if (core) {
         own[i] = 1;
         any = true;
       }
@@ -255,13 +280,29 @@ function labelEdgesFromRegions(labels, flat, lab, opaque, centers, width, height
   }
   for (let i = 0; i < n; i++) {
     if (!opaque[i] || flat[i]) continue;
-    const mask = (cand[i] | always) >>> 0 || 0xffffffff;
     const p = [lab.L[i], lab.A[i], lab.B[i]];
-    let best = 0;
+    const nearest = nearestOf[i];
+    const nearestD = nearestDist[i];
+    // Only pixels that look like an anti-aliased blend of the region colors
+    // around them (pink between red and white) are limited to those colors.
+    // Anything else keeps its nearest color even with no flat region of it
+    // nearby, so thin outlines, small lettering and shading survive.
+    const mask = cand[i];
+    if (!mask || textured[i] || (mask >>> nearest) & 1) {
+      labels[i] = nearest;
+      continue;
+    }
+    const allowed = [];
+    for (let c = 0; c < centers.length; c++) if ((mask >>> c) & 1) allowed.push({ lab: centers[c], c });
+    const blend = mixError(p, allowed);
+    if (blend >= nearestD || blend > BLEND_MATCH * BLEND_MATCH) {
+      labels[i] = nearest;
+      continue;
+    }
+    let best = nearest;
     let bestD = Infinity;
-    for (let c = 0; c < centers.length; c++) {
-      if (!((mask >>> c) & 1)) continue;
-      const dd = dist2(p, centers[c]);
+    for (const { lab: center, c } of allowed) {
+      const dd = dist2(p, center);
       if (dd < bestD) {
         bestD = dd;
         best = c;
@@ -671,39 +712,50 @@ async function vectorize(input, options = {}) {
     if (kept.length) clusters = kept;
   }
 
-  // Thin details (small text, outlines) may have no flat pixels at all. Find
-  // pixels the palette can't explain, either as one of its colors or as an
-  // anti-aliased mix of two of them, and learn extra colors from those.
+  // Not every real color has perfectly flat pixels: shaded or textured parts
+  // (gray machinery, a green stripe) and thin details (small text, outlines)
+  // can be missing from the palette. Learn extra colors from pixels the palette
+  // can't explain. Inside textured areas a color must be close to a palette
+  // color; on edges it may also be an anti-aliased blend of two of them.
+  const textured = findFlatPixels(lab, opaque, width, height, 0.09, Math.max(1, Math.round(scale)));
   if (useFlat) {
-    const misfits = [];
+    const regionMisfits = [];
+    const edgeMisfits = [];
     const allStep = Math.max(1, Math.floor(opaqueCount / 120000));
     let k = 0;
     for (let i = 0; i < n; i++) {
       if (!opaque[i] || flat[i] || k++ % allStep !== 0) continue;
       const p = [lab.L[i], lab.A[i], lab.B[i]];
-      if (mixError(p, clusters) > 0.1 * 0.1) misfits.push(p);
+      if (textured[i]) {
+        if (nearestDist2(p, clusters) > 0.08 * 0.08) regionMisfits.push(p);
+      } else if (mixError(p, clusters) > 0.1 * 0.1) {
+        edgeMisfits.push(p);
+      }
     }
     const sampled = Math.ceil(opaqueCount / allStep);
-    if (misfits.length > sampled * 0.002) {
-      const scaleW = samples.length / sampled;
-      const extra = mergeClusters(kmeans(misfits, 6, rand), 0.15, 6)
-        .filter((c) => c.weight > sampled * 0.001)
-        .map((c) => ({ lab: c.lab, weight: c.weight * scaleW }));
-      // Drop extras that are just an anti-aliased blend of two other colors
-      // (the gray halo around thin black text on white), least common first.
-      extra.sort((a, b) => a.weight - b.weight);
-      for (let i = 0; i < extra.length; ) {
-        const others = [...clusters, ...extra.filter((_, j) => j !== i)];
-        if (mixError(extra[i].lab, others) < 0.1 * 0.1) extra.splice(i, 1);
-        else i++;
-      }
-      clusters = mergeClusters([...clusters, ...extra], autoColors ? 0.07 : 0, cap);
+    const scaleW = samples.length / sampled;
+    const learn = (pixels) =>
+      pixels.length > sampled * 0.002
+        ? mergeClusters(kmeans(pixels, 8, rand), 0.1, 8)
+            .filter((c) => c.weight > sampled * 0.001)
+            .map((c) => ({ lab: c.lab, weight: c.weight * scaleW }))
+        : [];
+    const regionExtra = learn(regionMisfits);
+    const edgeExtra = learn(edgeMisfits);
+    // Drop edge extras that are just an anti-aliased blend of two other colors
+    // (the gray halo around thin black text on white), least common first.
+    edgeExtra.sort((a, b) => a.weight - b.weight);
+    for (let i = 0; i < edgeExtra.length; ) {
+      const others = [...clusters, ...regionExtra, ...edgeExtra.filter((_, j) => j !== i)];
+      if (mixError(edgeExtra[i].lab, others) < 0.1 * 0.1) edgeExtra.splice(i, 1);
+      else i++;
     }
+    clusters = mergeClusters([...clusters, ...regionExtra, ...edgeExtra], autoColors ? 0.07 : 0, cap);
   }
 
   const centers = clusters.map((c) => c.lab);
   let labels = assignLabels(lab, useFlat ? flat : opaque, centers);
-  if (useFlat) labels = labelEdgesFromRegions(labels, flat, lab, opaque, centers, width, height, Math.ceil(3 * Math.max(1, scale)) + 2);
+  if (useFlat) labels = labelEdgesFromRegions(labels, flat, textured, lab, opaque, centers, width, height, Math.ceil(3 * Math.max(1, scale)) + 2);
 
   labels = majorityFilter(labels, width, height);
   labels = removeSmallRegions(labels, width, height, Math.max(4, Math.round(n * preset.minRegion)));
