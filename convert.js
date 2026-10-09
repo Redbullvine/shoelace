@@ -37,16 +37,23 @@ let progressTimer = null;
 // Status bar between the panels: red while the image uploads, yellow while
 // the server traces it, green when the EPS is ready. The server doesn't report
 // progress, so the yellow phase creeps toward 90% until the answer arrives.
+// The truck drives from the left edge (0%) to the right edge (100%), and the
+// purple road behind it fills in as it goes.
+function moveTruck(percent) {
+  els.progress.style.setProperty("--p", percent / 100);
+  els.progressFill.style.width = `${percent}%`;
+}
+
 function setProgress(state, label, percent) {
   clearInterval(progressTimer);
   els.progress.dataset.state = state;
   els.progressLabel.textContent = label;
-  els.progressFill.style.width = `${percent}%`;
+  if (percent != null) moveTruck(percent);
   if (state === "converting") {
     let current = percent;
     progressTimer = setInterval(() => {
       current += (90 - current) * 0.08;
-      els.progressFill.style.width = `${current}%`;
+      moveTruck(current);
     }, 300);
   }
 }
@@ -266,7 +273,7 @@ async function convert() {
     setStatus("Done", "good");
     fontsPromise.then(renderFonts);
   } catch (error) {
-    setProgress("error", error.message, 100);
+    setProgress("error", error.message, null);
     setStatus(error.message, "warning");
   } finally {
     els.convertBtn.disabled = false;
