@@ -1,14 +1,15 @@
-﻿:root {
-  --ink: #1c1b18;
-  --accent: #4B2E83;
-  --accent-hover: #3E256D;
+:root {
+  /* Mount Vernon purple and white */
+  --ink: #1f1030;
+  --accent: #3e0279;
+  --accent-hover: #2c0157;
   --accent-dark: var(--accent-hover);
-  --paper: #f7f0e8;
-  --mist: #efe3d5;
-  --sand: #e6d4bf;
-  --leaf: #3b6a5f;
-  --sun: #f6d26a;
-  --shadow: rgba(21, 19, 16, 0.12);
+  --paper: #ffffff;
+  --mist: #f1eaf9;
+  --sand: #e2d4f2;
+  --leaf: var(--accent);
+  --sun: #ffffff;
+  --shadow: rgba(62, 2, 121, 0.14);
 }
 
 * {
@@ -19,7 +20,7 @@ body {
   margin: 0;
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   color: var(--ink);
-  background: radial-gradient(circle at top left, #fff7ef, #f3e4d3 40%, #e6d4bf 100%);
+  background: #ffffff;
   min-height: 100vh;
 }
 
@@ -27,6 +28,7 @@ h1,
 h2,
 h3 {
   font-family: "Fraunces", "Times New Roman", serif;
+  color: var(--accent);
   margin: 0 0 0.6rem 0;
 }
 
@@ -40,12 +42,13 @@ a {
   justify-content: space-between;
   align-items: center;
   padding: 1.2rem 2.4rem;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(14px);
+  background: var(--accent);
+  color: #fff;
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 4px solid #fff;
+  box-shadow: 0 2px 0 var(--accent);
 }
 
 .brand {
@@ -60,7 +63,7 @@ a {
 }
 
 .nav a.active {
-  border-bottom-color: var(--accent);
+  border-bottom-color: #fff;
 }
 
 .container {
@@ -93,8 +96,14 @@ a {
 }
 
 .hero-card .card {
-  background: var(--ink);
-  color: #fff5ec;
+  background: var(--accent);
+  color: #fff;
+}
+
+.hero-card .card h1,
+.hero-card .card h2,
+.hero-card .card h3 {
+  color: #fff;
 }
 
 .grid {
@@ -105,7 +114,8 @@ a {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.85);
+  background: #fff;
+  border: 2px solid var(--accent);
   border-radius: 18px;
   padding: 1.5rem;
   box-shadow: 0 12px 30px var(--shadow);
@@ -123,8 +133,9 @@ a {
   display: inline-block;
   padding: 0.3rem 0.8rem;
   border-radius: 999px;
-  background: var(--sun);
-  color: var(--ink);
+  background: #fff;
+  color: var(--accent);
+  border: 1px solid var(--accent);
   font-size: 0.8rem;
   margin-top: 1rem;
 }
@@ -142,6 +153,8 @@ a {
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
   background: var(--mist);
+  color: var(--accent);
+  font-weight: 600;
   font-size: 0.85rem;
 }
 
@@ -198,8 +211,9 @@ a {
 }
 
 .btn.ghost {
-  background: transparent;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: #fff;
+  color: var(--accent);
+  border: 2px solid var(--accent);
 }
 
 .thumb-grid {
@@ -288,8 +302,8 @@ a {
 }
 
 .code {
-  background: #141312;
-  color: #f9f1e7;
+  background: var(--accent);
+  color: #fff;
   padding: 1rem;
   border-radius: 12px;
   overflow-x: auto;
@@ -323,7 +337,7 @@ a {
   justify-content: center;
   gap: 0.4rem;
   padding: 2rem 1rem;
-  border: 2px dashed rgba(0, 0, 0, 0.2);
+  border: 2px dashed var(--accent);
   border-radius: 16px;
   text-align: center;
   cursor: pointer;
@@ -421,46 +435,156 @@ a {
   grid-template-columns: 1fr;
 }
 
+/* Sheriff's truck drives left to right as the conversion runs. */
 .progress {
-  --progress-color: #c62828;
+  --p: 0;
+  --truck-w: 150px;
+  padding: 0.4rem 0 0;
 }
 
-.progress[data-state="converting"] {
-  --progress-color: #f2b200;
+.road {
+  position: relative;
+  height: 86px;
 }
 
-.progress[data-state="done"] {
-  --progress-color: #2e7d32;
-}
-
-.progress[data-state="idle"] {
-  --progress-color: rgba(0, 0, 0, 0.2);
-}
-
-.progress-track {
-  height: 14px;
+.road::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
+  height: 6px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  background: var(--sand);
 }
 
 .progress-fill {
-  height: 100%;
+  position: absolute;
+  left: 0;
+  bottom: 6px;
+  height: 6px;
   width: 0;
   border-radius: 999px;
-  background: var(--progress-color);
-  transition: width 0.4s ease, background-color 0.3s ease;
+  background: var(--accent);
+  z-index: 1;
+  transition: width 0.4s ease;
+}
+
+.truck {
+  position: absolute;
+  bottom: 4px;
+  left: calc((100% - var(--truck-w)) * var(--p));
+  width: var(--truck-w);
+  z-index: 2;
+  transition: left 0.4s ease;
+}
+
+.truck img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.progress[data-state="uploading"] .truck img,
+.progress[data-state="converting"] .truck img {
+  animation: bounce 0.35s ease-in-out infinite alternate;
+}
+
+/* Light bar sits on the cab roof. */
+.lightbar {
+  position: absolute;
+  left: 36%;
+  top: -9px;
+  width: 24%;
+  height: 10px;
+  display: flex;
+  border-radius: 4px 4px 1px 1px;
+  overflow: visible;
+  background: #222;
+  padding: 1px;
+  gap: 1px;
+}
+
+.light {
+  flex: 1;
+  border-radius: 2px;
+  opacity: 0.35;
+}
+
+.light.red { background: #ff1f1f; }
+.light.white { background: #ffffff; }
+.light.blue { background: #1f5bff; }
+
+.progress[data-state="uploading"] .light,
+.progress[data-state="converting"] .light,
+.progress[data-state="done"] .light {
+  animation: flash 0.9s steps(1, end) infinite;
+}
+
+.progress[data-state="uploading"] .light.white,
+.progress[data-state="converting"] .light.white,
+.progress[data-state="done"] .light.white {
+  animation-delay: 0.3s;
+}
+
+.progress[data-state="uploading"] .light.blue,
+.progress[data-state="converting"] .light.blue,
+.progress[data-state="done"] .light.blue {
+  animation-delay: 0.6s;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 1;
+    box-shadow: 0 0 14px 6px currentColor;
+  }
+  33% {
+    opacity: 0.35;
+    box-shadow: none;
+  }
+}
+
+.light.red { color: rgba(255, 31, 31, 0.8); }
+.light.white { color: rgba(255, 255, 255, 0.95); }
+.light.blue { color: rgba(31, 91, 255, 0.8); }
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-1.5px); }
 }
 
 .progress-label {
   margin-top: 0.4rem;
   font-weight: 600;
   text-align: center;
-  color: var(--progress-color);
+  color: var(--accent);
+}
+
+.progress[data-state="error"] .progress-label {
+  color: #b00020;
 }
 
 .progress[data-state="idle"] .progress-label {
   color: rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .truck,
+  .progress-fill {
+    transition: none;
+  }
+
+  .truck img,
+  .light {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .progress {
+    --truck-w: 110px;
+  }
 }
 
 .details {

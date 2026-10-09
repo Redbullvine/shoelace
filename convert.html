@@ -93,7 +93,13 @@
           <div class="preview checker"><img id="originalPreview" alt="Original image" /></div>
         </div>
         <div class="progress" id="progress" data-state="idle" role="status" aria-live="polite">
-          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="road">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="truck">
+              <div class="lightbar" aria-hidden="true"><span class="light red"></span><span class="light white"></span><span class="light blue"></span></div>
+              <img src="images/sheriff-truck.png" alt="Sheriff's truck" width="360" height="124" />
+            </div>
+          </div>
           <div class="progress-label" id="progressLabel">Ready to convert</div>
         </div>
         <div class="card">
