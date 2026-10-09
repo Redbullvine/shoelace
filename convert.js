@@ -13,6 +13,7 @@ const els = {
   vector: document.getElementById("vectorPreview"),
   downloadCard: document.getElementById("downloadCard"),
   downloadBtn: document.getElementById("downloadBtn"),
+  emailBtn: document.getElementById("emailBtn"),
   swatches: document.getElementById("swatches"),
   meta: document.getElementById("resultMeta"),
   colors: document.getElementById("colors"),
@@ -24,6 +25,7 @@ const els = {
 
 let currentFile = null;
 let downloadUrl = null;
+let lastResult = null;
 
 function setStatus(text, tone = "") {
   els.status.textContent = text;
@@ -114,6 +116,9 @@ async function convert() {
 }
 
 function showResult(data) {
+  lastResult = data;
+  els.emailBtn.disabled = false;
+  els.emailBtn.textContent = "Email EPS to justsayin@peoplescom.net";
   els.vector.innerHTML = data.svg || "<p class=\"hint\">Preview too large to show. The EPS is ready to download.</p>";
   els.swatches.innerHTML = data.colors
     .map(
@@ -136,6 +141,32 @@ function showResult(data) {
   els.downloadCard.hidden = false;
 }
 
+async function emailEps() {
+  if (!lastResult) return;
+  els.emailBtn.disabled = true;
+  els.emailBtn.textContent = "Sending...";
+  try {
+    const response = await fetch("/api/email-eps", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: lastResult.fileName,
+        eps: lastResult.eps,
+        colors: lastResult.colors.map((color) => color.hex),
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Email failed. Please try again.");
+    els.emailBtn.textContent = `Sent to ${data.sentTo}`;
+    setStatus("Emailed", "good");
+  } catch (error) {
+    els.emailBtn.disabled = false;
+    els.emailBtn.textContent = "Email EPS to justsayin@peoplescom.net";
+    setStatus(error.message, "warning");
+  }
+}
+
+els.emailBtn.addEventListener("click", emailEps);
 els.input.addEventListener("change", (event) => selectFile(event.target.files[0]));
 els.convertBtn.addEventListener("click", convert);
 
